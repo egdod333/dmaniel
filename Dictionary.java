@@ -7,8 +7,9 @@ import zorklike.Item;
 public class Dictionary {
     private String[] roomNames;
     private String[] itemNames;
-    public static String[] actions = {"list","go","move","find","search","look","examine","take","grab","get","open","close","drop","foreward","front","forewards","right","left","back","backward","backwards","inventory"};
-    
+    public static String[] actions = {"list","go","move","find","search","look","examine","take","grab","get","open","close","drop","foreward","front","forewards","right","left","back","backward","backwards","inventory","backpack","around"};
+    public static String[] useless = {"to","an","a","me","my","i","your","you","the","mine","at"};
+    public static String[] splitters = {"with"};
 	public static String[] movement = {"go","move","foreward","front","forewards","right","left","back","backward","backwards"};
     public static String[] directions = {"foreward","forewards","front","right","left","backward","backwards","back"};
 	public static String[] searching = {"find","search","look","examine"};

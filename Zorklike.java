@@ -7,7 +7,9 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Scanner;
+import java.util.HashMap;
 
 public class Zorklike {
 	//init variables
@@ -21,12 +23,18 @@ public class Zorklike {
 	public static List<String> inventory;
 	public static List<Room> rooms;
 	public static List<Item> items;
+	@FunctionalInterface
+	public static interface Command {
+		int command(String action, String object);
+	}
+	public static HashMap<String, Command> commandHashMap;
 	public static void main(String[] args) {
 		//declare init variables
 		boolean run = true;
 		inventory = new ArrayList<String>();
 		rooms = new ArrayList<Room>();
 		items = new ArrayList<Item>();
+		commandHashMap = new HashMap<String, Command>();
 		scan = new Scanner(System.in);
 		inventory.add("e");
 		inventory.add("haiii");
@@ -89,6 +97,29 @@ public class Zorklike {
 		//init dictionary
 		dictionary = new Dictionary();
 		List<String> movementL = Arrays.asList(Dictionary.directions);
+		//command and populate hashmap
+		Command checkInventory = (String target, String object) -> {
+			if (inventory.size()==0) {
+				System.out.println("Peeking into your backpack, you find nothing.");
+				return 0;
+			}
+			else {
+				System.out.println("You have a total of " + inventory.size() + " items in your backpack.");
+				int current = 1;
+				for (String item : inventory) {
+					String[] check = item.split("");
+					if (check[0].toLowerCase().equals("a") || check[0].toLowerCase().equals("e") || check[0].toLowerCase().equals("i") || check[0].toLowerCase().equals("o") || check[0].toLowerCase().equals("u")) {
+						System.out.println(current + ": An " + item);
+					}
+					else {
+						System.out.println(current + ": A " + item);
+					}
+					current++;
+				}
+				return 0;
+			}
+		};
+		commandHashMap.put("inventory",checkInventory);
 		//game running
 		while (run) {
 			//input
@@ -101,54 +132,132 @@ public class Zorklike {
 			System.out.print("> ");
 			String input = scan.nextLine();
 			input = input.toLowerCase();
-			// split input and analyze
+			// parser logic
 			String[] stringify = input.split(" ");
-			for (String token : stringify) {
-				if (action==null) {
-					for (int i=0;i<Dictionary.actions.length;i++) {
-						if (token.equals(Dictionary.actions[i])) {
-							action = token;
-							break;
-						}
+			ArrayList<String> tokenized = new ArrayList<String>(Arrays.asList(stringify));
+			for (int i=0;i<tokenized.size();i++) {
+				String token = tokenized.get(i);
+				for (String item : Dictionary.useless) {
+					if (token.equals(item)) {
+						tokenized.remove(i);
 					}
-				}
-				else if (action!=null && object==null && target==null) {
-					boolean checkRooms = dictionary.searchRooms(token.toLowerCase());
-					System.out.println("checkRooms: " + checkRooms);
-					boolean checkItems = dictionary.searchItems(token.toLowerCase());
-					System.out.println("checkItems: " + checkItems);
-					if (checkRooms) {
-						target=token;
-					}
-					else if (checkItems) {
-						object=token;
-					}
-					else if (token.equals("around")) {
-						target="around";
-					}
-					else if (token.equals("foreward") || token.equals("front") || token.equals("forewards")) {
-						target="foreward";
-					}
-					else if (token.equals("backward") || token.equals("back") || token.equals("backwards")) {
-						target="backwards";
-					}
-					else if (token.equals("left")) {
-						target="left";
-					}
-					else if (token.equals("right")) {
-						target="right";
-					}
-					else if (token.equals("inventory")) {
-						target="inventory";
-					}
-					else {}
 				}
 			}
+			int index = -1;
+			for (int i=0;i<tokenized.size();i++) {
+				String token = tokenized.get(i);
+				for (String verb : Dictionary.actions) {
+					if (token.equalsIgnoreCase(verb)) {
+						action = token;
+						index = i;
+						break;
+					}
+				}
+				if (index!=-1) break;
+			}
+			if (index==-1) {
+				System.out.println("ERROR ON PARSER: ERROR 0 (no clue how this happened lol)");
+			}
+			else {
+				tokenized.subList(0,index+1).clear();
+			}
+
+			Iterator<String> iterate = tokenized.iterator();
+			while (iterate.hasNext()) {
+				String token = iterate.next();
+				System.out.println(token);
+				if (object == null && target == null) {
+					boolean checkRooms = dictionary.searchRooms(token.toLowerCase());
+					boolean checkItems = dictionary.searchItems(token.toLowerCase());
+
+					if (checkRooms) {
+						target = token;
+					}
+					else if (checkItems) {
+						object = token;
+					}
+					else if (token.equals("around")) {
+						target = "around";
+					}
+					else if (token.equals("foreward") || token.equals("front") || token.equals("forewards")) {
+						target = "forewards";
+					}
+					else if (token.equals("backward") || token.equals("back") || token.equals("backwards")) {
+						target = "backwards";
+					}
+					else if (token.equals("left")) {
+						target = "left";
+					}
+					else if (token.equals("right")) {
+						target = "right";
+					}
+					else if (token.equals("inventory")) {
+						action = "inventory";
+					}
+					else if (token.equals("backpack")) {
+						action = "inventory";
+					}
+				}
+			}
+			if (action.equals("foreward") || action.equals("front") || action.equals("forewards")) {
+				action = "forewards";
+			}
+			else if (action.equals("backward") || action.equals("back") || action.equals("backwards")) {
+				action = "backwards";
+			}
+			else if (action.equals("backpack")) {
+				action = "inventory";
+			}
+			// for (String token : tokenized) {
+			// 	if (action==null) {
+			// 		for (int i=0;i<Dictionary.actions.length;i++) {
+			// 			if (token.equals(Dictionary.actions[i])) {
+			// 				action = token;
+			// 				for (int x=0;x<=i;x++) {
+			// 					tokenized.remove(x);
+			// 				}
+			// 				break;
+			// 			}
+			// 		}
+			// 	}
+			// 	else if (action!=null && object==null && target==null) {
+			// 		boolean checkRooms = dictionary.searchRooms(token.toLowerCase());
+			// 		System.out.println("checkRooms: " + checkRooms);
+			// 		boolean checkItems = dictionary.searchItems(token.toLowerCase());
+			// 		System.out.println("checkItems: " + checkItems);
+			// 		if (checkRooms) {
+			// 			target=token;
+			// 		}
+			// 		else if (checkItems) {
+			// 			object=token;
+			// 		}
+			// 		else if (token.equals("around")) {
+			// 			target="around";
+			// 		}
+			// 		else if (token.equals("foreward") || token.equals("front") || token.equals("forewards")) {
+			// 			target="foreward";
+			// 		}
+			// 		else if (token.equals("backward") || token.equals("back") || token.equals("backwards")) {
+			// 			target="backwards";
+			// 		}
+			// 		else if (token.equals("left")) {
+			// 			target="left";
+			// 		}
+			// 		else if (token.equals("right")) {
+			// 			target="right";
+			// 		}
+			// 		else if (token.equals("inventory")) {
+			// 			target="inventory";
+			// 		}
+			// 		else {}
+			// 	}
+			// }
 			//response
 			// debug
 			System.out.println("action: " + action);
 			System.out.println("target: " + target);
 			System.out.println("object: " + object);
+			commandHashMap.get(action).command(action,target);
 			// conditionals
 			// if (action!=null) {
 			// 	if (action.equals("inventory") || (action.equals("open") && target.equals("inventory"))) {
