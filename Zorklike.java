@@ -25,9 +25,27 @@ public class Zorklike {
 	public static List<Room> rooms;
 	@FunctionalInterface
 	public static interface Command {
-		int command(String action, String object);
+		int command(String action, String object, String target);
 	}
 	public static HashMap<String, Command> commandHashMap;
+	public static final String redBackground = "\033[41m";
+	public static final String resetFormatting = "\033[0m";
+	public static final String blueColor = "\u001B[34m";
+	public static final String boldBlueColor = "\033[1;34m";
+	public static final String boldRedColor = "\033[1;31m";
+	public static final String purpleColor = "\u001B[35m";
+	public static final String greenColor = "\u001B[32m";
+	public static final String greenBackground = "\u001B[42m";
+	public static final String yellowColor = "\u001B[33m";
+	public static final String yellowBackground = "\u001B[43m";
+	public static final String cyanColor = "\u001B[36m";
+	public static final String blueBackground = "\u001B[44m";
+	public static final String blackColor = "\u001B[30m";
+	public static final String brightYellowColor = "\033[0;93m";
+	public static final String cyanBackground = "\033[46m";
+	public static final String boldWhiteColor = "\033[1;37m";
+	public static final String italics = "\033[3m";
+	public static final String clear = "\033[H\033[2J";
 	public static void main(String[] args) {
 		//declare init variables
 		boolean run = true;
@@ -50,11 +68,11 @@ public class Zorklike {
 		// behind you, testroom
 
 		//testroom3
-		rooms.add(new Room("testroom3","testing room travel","yuh its testroom3", new Connection("right","testroom",true)));
+		rooms.add(new Room("testroom3","testing room travel","yuh its testroom3", new Connection("left","testroom",true)));
 		rooms.get(2).addItems(new Item(Type.CD,"flash drive","A small red 16gb flash drive",true,0,0,"123.cmd"));
 
 		//current room variable (for travel)
-		Room curRoom = rooms.get(0);
+		Room[] curRoom = {rooms.get(0)};
 
 		//init dictionary
 		dictionary = new Dictionary();
@@ -62,7 +80,7 @@ public class Zorklike {
 		
 		//command and populate hashmap
 		//inventory
-		Command checkInventory = (String target, String object) -> {
+		Command checkInventory = (String aciton, String target, String object) -> {
 			if (inventory.size()==0) {
 				System.out.println("Peeking into your backpack, you find nothing.");
 				return 0;
@@ -86,7 +104,7 @@ public class Zorklike {
 		commandHashMap.put("inventory",checkInventory);
 		
 		//check items
-		Command checkItemList = (String target, String object) -> {
+		Command checkItemList = (String action, String target, String object) -> {
 			for (String itemName : dictionary.getItemNames()) {
 				System.out.println(itemName);
 			}
@@ -95,12 +113,12 @@ public class Zorklike {
 		commandHashMap.put("list",checkItemList);
 
 		//look around
-		Command lookAround = (String object, String target) -> {
-			String[] name = curRoom.getName().split("");
+		Command lookAround = (String action, String object, String target) -> {
+			String[] name = curRoom[0].getName().split("");
 			name[0]=name[0].toUpperCase();
 			String nameCap = String.join("",name);
 			System.out.println("You look around the " + nameCap + " and see:");
-			Item[] curItems = curRoom.getItemL();
+			Item[] curItems = curRoom[0].getItemL();
 			if (curItems.length==0) {
 				System.out.println("Nothing...");
 				return 0;
@@ -119,16 +137,123 @@ public class Zorklike {
 			}
 		};
 		commandHashMap.put("around",lookAround);
+
+		//movement using go or move
+		Command moveRooms = (String action, String object, String target) -> {
+			Connection[] connectionList = curRoom[0].getConnections();
+			for (Connection connect : connectionList) {
+				if (connect.getName().equalsIgnoreCase(target)) {
+					for (Room room : rooms) {
+						if (room.getName().equalsIgnoreCase(target)) {
+							curRoom[0] = room;
+							System.out.println(room.getDescription());
+						}
+					}
+				}
+			}
+			return 0;
+		};
+		commandHashMap.put("go",moveRooms);
+		commandHashMap.put("move",moveRooms);
+		//movement using directions
+		Command moveDirection = (String action, String object, String target) -> {
+			String act = action;
+			if (true) {
+				if (true) {
+					if (true) {
+						if (true) {
+							if (true) {
+								if (true) {
+									if (true) {
+										if (true) {
+											if (true) {
+												if (true) {
+													if (true) {
+														if (true) {
+															if (true) {
+																if (true){
+																	if (true) {
+																		if (true) {
+																			if (true) {
+																				if (true) {
+																					if (true){
+																						if (true) {
+																							if (true) {
+																								if (true) {
+																									if (true) {
+																										if (true) {
+																											if (true) {
+																												if (true) {
+																													System.out.print("");
+																												}
+																											}
+																										}
+																									}
+																								}
+																							}
+																						}
+																					}
+																				}
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			if (act.equals("foreward") || act.equals("forewards")) {
+				act = "front";
+			}
+			else if (act.equals("backwards") || act.equals("backward")) {
+				act = "back";
+			}
+			for (Connection connect : curRoom[0].getConnections()) {
+				if (connect.getSide().equals(act)) {
+					String name = connect.getName();
+					for (Room room : rooms) {
+						if (room.getName().equalsIgnoreCase(name)) {
+							curRoom[0] = room;
+							System.out.println(room.getDescription());
+							return 0;
+						}
+					}
+				}
+			}
+
+			return 0;
+		};
+		for (String command : Dictionary.directions) {
+			commandHashMap.put(command,moveDirection);
+		}
+
+		//grabbing items
+		Command grabItem = (String action, String object, String target) -> {
+			return 0;
+		};
 		
 		//game running
 		while (run) {
 			//input
+			
 			// action
 			String action = null;
+
 			// target (usually not items)
 			String target = null;
+
 			// object (will not be room; if action is go or forward or any movement verb, it will use target not object)
 			String object = null;
+
 			System.out.print("> ");
 			String input = scan.nextLine();
 			input = input.toLowerCase();
@@ -201,8 +326,8 @@ public class Zorklike {
 					}
 					String targetListString = String.join(" ",targetList);
 					String objectListString = String.join(" ",objectList);
-					target = targetListString;
-					object = objectListString;
+					target = targetListString.trim();
+					object = objectListString.trim();
 				}
 				else {
 					ArrayList<String> tokenList = new ArrayList<String>();
@@ -210,7 +335,6 @@ public class Zorklike {
 						tokenList.add(token);
 					}
 					String token = String.join(" ",tokenList);
-					System.out.println(token);
 					boolean checkRooms = dictionary.searchRooms(token.toLowerCase());
 					boolean checkItems = dictionary.searchItems(token.toLowerCase());
 					System.out.println("checkRooms: " + checkRooms);
@@ -226,10 +350,10 @@ public class Zorklike {
 						action = "around";
 					}
 					else if (token.equals("foreward") || token.equals("front") || token.equals("forewards")) {
-						action = "forewards";
+						action = "front";
 					}
 					else if (token.equals("backward") || token.equals("back") || token.equals("backwards")) {
-						action = "backwards";
+						action = "back";
 					}
 					else if (token.equals("left")) {
 						action = "left";
@@ -244,21 +368,12 @@ public class Zorklike {
 						action = "inventory";
 					}
 				}
-				if (action.equals("foreward") || action.equals("front") || action.equals("forewards")) {
-					action = "forewards";
-				}
-				else if (action.equals("backward") || action.equals("back") || action.equals("backwards")) {
-					action = "backwards";
-				}
-				else if (action.equals("backpack")) {
-					action = "inventory";
-				}
 				//response
 				// debug
 				System.out.println("action: " + action);
 				System.out.println("target: " + target);
 				System.out.println("object: " + object);
-				commandHashMap.get(action).command(target,object);
+				commandHashMap.get(action).command(action,object,target);
 			}
 			else {
 				System.out.println("Sorry, not quite sure what \"" + input + "\" means. Try again?");

@@ -7,7 +7,7 @@ import zorklike.Item;
 public class Dictionary {
     private String[] roomNames;
     private String[] itemNames;
-    public static String[] actions = {"list","go","move","find","search","look","examine","take","grab","get","open","close","drop","foreward","front","forewards","right","left","back","backward","backwards","inventory","backpack","around","use"};
+    public static String[] actions = {"list","go","move","find","search","look","examine","take","grab","get","open","close","drop","foreward","front","forewards","right","left","back","backward","backwards","inventory","backpack","around","use","xyzzy"};
     public static String[] useless = {"to","an","a","me","my","i","your","you","the","mine","at"};
     public static String[] splitters = {"with"};
     public static String[] flags = {"and",",","all"};
@@ -21,7 +21,6 @@ public class Dictionary {
         roomNames = new String[Zorklike.rooms.size()];
         int max = 0;
         for (Room room : Zorklike.rooms) {
-            System.out.println(room.getName());
             Item[] iteml = room.getItemL();
             if (iteml!=null) {
                 max += iteml.length;

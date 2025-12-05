@@ -28,7 +28,7 @@ public class Connection {
     public String getSide() {
         return side;
     }
-    public String getConnectedRoom() {
+    public String getName() {
         return room;
     }
     public boolean isOpen() {
