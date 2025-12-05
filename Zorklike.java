@@ -119,6 +119,7 @@ public class Zorklike {
 			String nameCap = String.join("",name);
 			System.out.println("You look around the " + nameCap + " and see:");
 			Item[] curItems = curRoom[0].getItemL();
+			Connection[] curConnects = curRoom[0].getConnections();
 			if (curItems.length==0) {
 				System.out.println("Nothing...");
 				return 0;
@@ -133,8 +134,32 @@ public class Zorklike {
 						System.out.println("A " + item.getName());
 					}
 				}
-				return 0;
 			}
+			if (curConnects.length==0){
+				System.out.println("Oddly, the room you are in is connected to " + italics + "no other room..." + resetFormatting + " Strange. How did you even get here??");
+			}
+			else {
+				List<String> listOfConnections = new ArrayList<String>();
+				for (Connection connect : curConnects) {
+					String side = connect.getSide();
+					if (side.equals("front")) {
+						listOfConnections.add("In front of you is the " + connect.getName() + ". ");
+					}
+					else if (side.equals("back")) {
+						listOfConnections.add("Behind you is the " + connect.getName() + ". ");
+					}
+					else if (side.equals("left")) {
+						listOfConnections.add("To your left is the " + connect.getName() + ". ");
+					}
+					else if (side.equals("right")) {
+						listOfConnections.add("To your right is the " + connect.getName() + ". ");
+					}
+				}
+				String fin = String.join("",listOfConnections);
+				System.out.println(fin);
+				listOfConnections.clear();
+			}
+			return 0;
 		};
 		commandHashMap.put("around",lookAround);
 
