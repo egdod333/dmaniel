@@ -120,9 +120,8 @@ public class Zorklike {
 			System.out.println("You look around the " + nameCap + " and see:");
 			Item[] curItems = curRoom[0].getItemL();
 			Connection[] curConnects = curRoom[0].getConnections();
-			if (curItems.length==0) {
+			if (curItems==null) {
 				System.out.println("Nothing...");
-				return 0;
 			}
 			else {
 				for (Item item : curItems) {
@@ -171,9 +170,33 @@ public class Zorklike {
 					for (Room room : rooms) {
 						if (room.getName().equalsIgnoreCase(target)) {
 							curRoom[0] = room;
-							System.out.println(room.getDescription());
+							System.out.print("You are now in " + room.getName() + ". " + room.getDescription() + ". ");
+							List<String> listOfConnections = new ArrayList<String>();
+							for (Connection connect2 : room.getConnections()) {
+								String side = connect2.getSide();
+								if (side.equals("front")) {
+									listOfConnections.add("In front of you is the " + connect2.getName() + ". ");
+								}
+								else if (side.equals("back")) {
+									listOfConnections.add("Behind you is the " + connect2.getName() + ". ");
+								}
+								else if (side.equals("left")) {
+									listOfConnections.add("To your left is the " + connect2.getName() + ". ");
+								}
+								else if (side.equals("right")) {
+									listOfConnections.add("To your right is the " + connect2.getName() + ". ");
+								}
+							}
+							String fin = String.join("",listOfConnections);
+							System.out.println(fin);
+							listOfConnections.clear();
+							return 0;
 						}
 					}
+				}
+				else if (target==null) {
+					System.out.println("...Where?");
+					return 0;
 				}
 			}
 			return 0;
@@ -196,7 +219,7 @@ public class Zorklike {
 													if (true) {
 														if (true) {
 															if (true) {
-																if (true){
+																if (true&false&true|true&true^false!=true&!false^true){
 																	if (true) {
 																		if (true) {
 																			if (true) {
@@ -204,7 +227,7 @@ public class Zorklike {
 																					if (true){
 																						if (true) {
 																							if (true) {
-																								if (true) {
+																								if (!!true&&true!=!true) {
 																									if (true) {
 																										if (true) {
 																											if (true) {
@@ -248,10 +271,32 @@ public class Zorklike {
 					for (Room room : rooms) {
 						if (room.getName().equalsIgnoreCase(name)) {
 							curRoom[0] = room;
-							System.out.println(room.getDescription());
+							System.out.print("You are now in " + name + ". " + room.getDescription() + ". ");
+							List<String> listOfConnections = new ArrayList<String>();
+							for (Connection connect2 : room.getConnections()) {
+								String side = connect2.getSide();
+								if (side.equals("front")) {
+									listOfConnections.add("In front of you is the " + connect2.getName() + ". ");
+								}
+								else if (side.equals("back")) {
+									listOfConnections.add("Behind you is the " + connect2.getName() + ". ");
+								}
+								else if (side.equals("left")) {
+									listOfConnections.add("To your left is the " + connect2.getName() + ". ");
+								}
+								else if (side.equals("right")) {
+									listOfConnections.add("To your right is the " + connect2.getName() + ". ");
+								}
+							}
+							String fin = String.join("",listOfConnections);
+							System.out.println(fin);
+							listOfConnections.clear();
 							return 0;
 						}
 					}
+				}
+				else {
+					System.out.println("You can't walk through the wall...");
 				}
 			}
 
@@ -265,6 +310,9 @@ public class Zorklike {
 		Command grabItem = (String action, String object, String target) -> {
 			return 0;
 		};
+		for (String cmd : Dictionary.obtaining) {
+			commandHashMap.put(cmd,grabItem);
+		}
 		
 		//game running
 		while (run) {

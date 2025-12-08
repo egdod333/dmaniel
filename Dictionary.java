@@ -60,4 +60,7 @@ public class Dictionary {
     public String[] getItemNames() {
         return itemNames;
     }
+    public String[] getRoomNames() {
+        return roomNames;
+    }
 }
