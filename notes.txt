@@ -1,10 +1,2 @@
-- change item list to be per-room and not be multidimensional x
-- change connecctions to be a class and not be multidimensional (allows for more scalability) x
-- remove global item array x
-- use arbitrary sized function parameters for first array (i.e. String... hello) put it at the END of the instance variables x
-looks like:
-void balls(A... greg) {/*body can reference greg as an A[]*/}
-valls(new A("!!"),variable (of type A), new A("what"));
-- call a method that does the same thing but for the second array x
-- code would look like new Room("one","two","three").second("four","five","six"); x
-- when doing inventory, move item to inventory by doing inventory.add(curRoom.remove(0)); (.remove() removes and returns the item it removes)
+- parser is fucked (move to the testroom2 returns no room but move to testroom2 does)
+- fix all printed text of rooms as 

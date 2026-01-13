@@ -1,17 +1,20 @@
 package zorklike;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Connection {
     private String side;
     private String room;
     private boolean open;
-    private String[] requirements;
+    private List<String> requirements;
     public Connection(String sd, String rm, boolean op, String... req) {
         side=sd;
         room=rm;
         open=op;
-        requirements=req;
+        requirements= new ArrayList<String>(Arrays.asList(req));
     }
     public Connection(String sd, String rm, boolean op) {
         side=sd;
@@ -34,20 +37,22 @@ public class Connection {
     public boolean isOpen() {
         return open;
     }
-    public String[] getRequirements() {
+    public List<String> getRequirements() {
         return requirements;
     }
     public boolean useItem(String item) {
         if (requirements==null) {
             return false;
         }
-        for (int i=0;i<requirements.length;i++) {
-            String require = requirements[i];
-            if (requirements[i]==null) {
+        Iterator<String> iterate1 = requirements.iterator();
+       while (iterate1.hasNext()) {
+            String nextReq = iterate1.next();
+            String require = nextReq;
+            if (nextReq==null) {
                 return false;
             }
-            else if (requirements[i].equalsIgnoreCase(item)) {
-                requirements[i]=null;
+            else if (nextReq.equalsIgnoreCase(item)) {
+                iterate1.remove();
                 Iterator<Item> iterate = Zorklike.inventory.iterator();
                 while (iterate.hasNext()) {
                     Item currentItem = iterate.next();
@@ -63,8 +68,8 @@ public class Connection {
     }
     public boolean openClose(boolean forceOpenClose) {
         if (!forceOpenClose) {
-            for (int i=0;i<requirements.length;i++) {
-                if (requirements[i] != null) {
+            for (int i=0;i<requirements.size();i++) {
+                if (requirements.get(i) != null) {
                     return false;
                 }
                 else {

@@ -8,14 +8,16 @@ public class Item {
     private Zorklike.Type type;
     private String name;
     private String desc;
+    private String extdesc;
     private boolean obtain;
     private int bdmg;
     private int dura;
     private String file;
-    public Item(Zorklike.Type ty, String nm, String dc, boolean obt, int dg, int db, String fl) {
+    public Item(Zorklike.Type ty, String nm, String dc, String extdc, boolean obt, int dg, int db, String fl) {
         type=ty;
         name=nm;
         desc=dc;
+        extdesc=extdc;
         obtain=obt;
         if (ty == Zorklike.Type.KEY) {
             bdmg=0;
@@ -30,6 +32,11 @@ public class Item {
         else if (ty == Zorklike.Type.WEAPON) {
             bdmg=dg;
             dura=db;
+            file=null;
+        }
+        else if (ty == Zorklike.Type.RANDOM) {
+            bdmg=0;
+            dura=0;
             file=null;
         }
     }
@@ -47,6 +54,9 @@ public class Item {
     }
     public String getDescription() {
         return desc;
+    }
+    public String getExtendedDescription() {
+        return extdesc;
     }
     public boolean isObtainable() {
         return obtain;
@@ -71,14 +81,14 @@ public class Item {
     }
     public void damageWeapon(int dmg) {
         dura-=dmg;
-        Iterator<Item> iterate = Zorklike.items.iterator();
-        while (iterate.hasNext()) {
-            Item currentItem = iterate.next();
-            if (currentItem.getName().equals(name)) {
-                iterate.remove();
-                break;
-            }
-        }
+        // Iterator<Item> iterate = Zorklike.curRoom[0].getItemL().iterator();
+        // while (iterate.hasNext()) {
+        //     Item currentItem = iterate.next();
+        //     if (currentItem.getName().equals(name)) {
+        //         iterate.remove();
+        //         break;
+        //     }
+        // }
     }
     public void fixWeapon(int heal) {
         dura+=heal;

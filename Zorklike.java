@@ -1,10 +1,11 @@
 package zorklike;
 
+//make open command open things, make locked furniture not tell you whats in them, and get locked rooms working properly
+
 //import statements
 import zorklike.Room;
 import zorklike.Dictionary;
 import zorklike.Connection;
-import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
@@ -19,7 +20,8 @@ public class Zorklike {
 	static enum Type {
         KEY,
         CD,
-        WEAPON
+        WEAPON,
+		RANDOM
     };
 	public static List<Item> inventory;
 	public static List<Room> rooms;
@@ -56,20 +58,21 @@ public class Zorklike {
 		//create rooms
 
 		//testroom (requires key and axe from all connections)
-		rooms.add(new Room("testroom","test room","its testroom oh yeah",new Connection("front","testroom2",true),new Connection("right","testroom3",true)));
+		rooms.add(new Room("testroom","test room","its testroom oh yeah",new Connection("front","testroom2",false),new Connection("right","testroom3",true)));
 		//testroom items
-		rooms.get(0).addItems(new Item(Type.KEY,"key","A simple key.",true,0,0,null),new Item(Type.WEAPON,"axe","A fireaxe.",true,10,100,null));
+		rooms.get(0).addFurniture(new Furniture("wooden table","wooden table", "a wooden table stands in the corner",false,true,new Item(Type.KEY,"key","simple key","A small silver key. It feels cold to the touch.",true,0,0,null),new Item(Type.WEAPON,"axe","fireaxe","A hefty red and yellow axe similar to those that the local fire department uses. How did this end up here?",true,10,100,null)));
 		// in front of you, testroom2, to your right, testroom3
 
 		//testroom2
 		rooms.add(new Room("testroom2","testing room travel","yuhhhh",new Connection("back","testroom",true,"key","axe")));
 		//testroom2 items
-		rooms.get(1).addItems();
+		rooms.get(1).addFurniture(new Furniture("chest","metal chest","A locked iron chest sits in the center of the room",true,false,new Item(Type.RANDOM,"lint","ball of lint","A ball of lint",false,0,0,null)).addRequirements("gray"));
+		
 		// behind you, testroom
 
 		//testroom3
 		rooms.add(new Room("testroom3","testing room travel","yuh its testroom3", new Connection("left","testroom",true)));
-		rooms.get(2).addItems(new Item(Type.CD,"flash drive","A small red 16gb flash drive",true,0,0,"123.cmd"));
+		rooms.get(2).addFurniture(new Furniture("countertop","a marble countertop","the marble glistens",false,true,new Item(Type.CD,"flash drive","small red 16gb flash drive","A small red flash drive, labeled \"Daravi 16GB\". A ring attached at the back of the drive lets you push the port outwards and pull it inwards.",true,0,0,"123.cmd"),new Item(Type.KEY,"gray","the color gray","its literally just gray",true,0,0,null)));
 
 		//current room variable (for travel)
 		Room[] curRoom = {rooms.get(0)};
@@ -89,12 +92,12 @@ public class Zorklike {
 				System.out.println("You have a total of " + inventory.size() + " items in your backpack.");
 				int current = 1;
 				for (Item item : inventory) {
-					String[] check = item.getName().split("");
+					String[] check = item.getDescription().split("");
 					if (check[0].toLowerCase().equals("a") || check[0].toLowerCase().equals("e") || check[0].toLowerCase().equals("i") || check[0].toLowerCase().equals("o") || check[0].toLowerCase().equals("u")) {
-						System.out.println(current + ": An " + item.getName());
+						System.out.println(current + ": An " + item.getDescription() + ".");
 					}
 					else {
-						System.out.println(current + ": A " + item.getName());
+						System.out.println(current + ": A " + item.getDescription() + ".");
 					}
 					current++;
 				}
@@ -102,6 +105,7 @@ public class Zorklike {
 			}
 		};
 		commandHashMap.put("inventory",checkInventory);
+		commandHashMap.put("backpack",checkInventory);
 		
 		//check items
 		Command checkItemList = (String action, String target, String object) -> {
@@ -114,90 +118,39 @@ public class Zorklike {
 
 		//look around
 		Command lookAround = (String action, String object, String target) -> {
-			String[] name = curRoom[0].getName().split("");
-			name[0]=name[0].toUpperCase();
-			String nameCap = String.join("",name);
-			System.out.println("You look around the " + nameCap + " and see:");
-			Item[] curItems = curRoom[0].getItemL();
-			Connection[] curConnects = curRoom[0].getConnections();
-			if (curItems==null) {
-				System.out.println("Nothing...");
-			}
-			else {
-				for (Item item : curItems) {
-					String[] check = item.getName().split("");
-					if (check[0].equalsIgnoreCase("a") || check[0].equalsIgnoreCase("e") || check[0].equalsIgnoreCase("i") || check[0].equalsIgnoreCase("o") || check[0].equalsIgnoreCase("u"))  {
-						System.out.println("An " + item.getName());
-					}
-					else {
-						System.out.println("A " + item.getName());
-					}
-				}
-			}
-			if (curConnects.length==0){
-				System.out.println("Oddly, the room you are in is connected to " + italics + "no other room..." + resetFormatting + " Strange. How did you even get here??");
-			}
-			else {
-				List<String> listOfConnections = new ArrayList<String>();
-				for (Connection connect : curConnects) {
-					String side = connect.getSide();
-					if (side.equals("front")) {
-						listOfConnections.add("In front of you is the " + connect.getName() + ". ");
-					}
-					else if (side.equals("back")) {
-						listOfConnections.add("Behind you is the " + connect.getName() + ". ");
-					}
-					else if (side.equals("left")) {
-						listOfConnections.add("To your left is the " + connect.getName() + ". ");
-					}
-					else if (side.equals("right")) {
-						listOfConnections.add("To your right is the " + connect.getName() + ". ");
-					}
-				}
-				String fin = String.join("",listOfConnections);
-				System.out.println(fin);
-				listOfConnections.clear();
-			}
+			curRoom[0].getInfo(null,2);
 			return 0;
 		};
 		commandHashMap.put("around",lookAround);
 
 		//movement using go or move
 		Command moveRooms = (String action, String object, String target) -> {
-			Connection[] connectionList = curRoom[0].getConnections();
-			for (Connection connect : connectionList) {
-				if (connect.getName().equalsIgnoreCase(target)) {
-					for (Room room : rooms) {
-						if (room.getName().equalsIgnoreCase(target)) {
-							curRoom[0] = room;
-							System.out.print("You are now in " + room.getName() + ". " + room.getDescription() + ". ");
-							List<String> listOfConnections = new ArrayList<String>();
-							for (Connection connect2 : room.getConnections()) {
-								String side = connect2.getSide();
-								if (side.equals("front")) {
-									listOfConnections.add("In front of you is the " + connect2.getName() + ". ");
-								}
-								else if (side.equals("back")) {
-									listOfConnections.add("Behind you is the " + connect2.getName() + ". ");
-								}
-								else if (side.equals("left")) {
-									listOfConnections.add("To your left is the " + connect2.getName() + ". ");
-								}
-								else if (side.equals("right")) {
-									listOfConnections.add("To your right is the " + connect2.getName() + ". ");
+			if (target!=null) {
+				Connection[] connectionList = curRoom[0].getConnections();
+				for (Connection connect : connectionList) {
+					if (connect.getName().equalsIgnoreCase(target)) {
+						if (connect.isOpen()) {
+							for (Room room : rooms) {
+								if (room.getName().equalsIgnoreCase(target)) {
+									curRoom[0] = room;
+									System.out.print("You are now in " + room.getName() + ". " + room.getDescription() + ".\n");
+									curRoom[0].getInfo(null,1);
+									return 0;
 								}
 							}
-							String fin = String.join("",listOfConnections);
-							System.out.println(fin);
-							listOfConnections.clear();
-							return 0;
+						}
+						else {
+							System.out.println("That door is locked. Sorry!");
 						}
 					}
+					else if (target==null) {
+						System.out.println("...Where?");
+						return 0;
+					}
 				}
-				else if (target==null) {
-					System.out.println("...Where?");
-					return 0;
-				}
+			}
+			else {
+				System.out.println("This room you speak of... uh... it doesn't exist.");
 			}
 			return 0;
 		};
@@ -230,7 +183,7 @@ public class Zorklike {
 																								if (!!true&&true!=!true) {
 																									if (true) {
 																										if (true) {
-																											if (true) {
+																											if (true^false) {
 																												if (true) {
 																													System.out.print("");
 																												}
@@ -241,7 +194,7 @@ public class Zorklike {
 																							}
 																						}
 																					}
-																				}
+																				} else if(true){}{}{}{}{};;;;;;;
 																			}
 																		}
 																	}
@@ -267,32 +220,22 @@ public class Zorklike {
 			}
 			for (Connection connect : curRoom[0].getConnections()) {
 				if (connect.getSide().equals(act)) {
-					String name = connect.getName();
-					for (Room room : rooms) {
-						if (room.getName().equalsIgnoreCase(name)) {
-							curRoom[0] = room;
-							System.out.print("You are now in " + name + ". " + room.getDescription() + ". ");
-							List<String> listOfConnections = new ArrayList<String>();
-							for (Connection connect2 : room.getConnections()) {
-								String side = connect2.getSide();
-								if (side.equals("front")) {
-									listOfConnections.add("In front of you is the " + connect2.getName() + ". ");
-								}
-								else if (side.equals("back")) {
-									listOfConnections.add("Behind you is the " + connect2.getName() + ". ");
-								}
-								else if (side.equals("left")) {
-									listOfConnections.add("To your left is the " + connect2.getName() + ". ");
-								}
-								else if (side.equals("right")) {
-									listOfConnections.add("To your right is the " + connect2.getName() + ". ");
-								}
+					if (connect.isOpen()) {
+						String name = connect.getName();
+						String[] upper = name.split("");
+						upper[0] = upper[0].toUpperCase();
+						String fixed = String.join("",upper);
+						for (Room room : rooms) {
+							if (room.getName().equalsIgnoreCase(name)) {
+								curRoom[0] = room;
+								System.out.print("You are now in " + fixed + ". " + room.getDescription() + ".\n");
+								curRoom[0].getInfo(null,1);
+								return 0;
 							}
-							String fin = String.join("",listOfConnections);
-							System.out.println(fin);
-							listOfConnections.clear();
-							return 0;
 						}
+					}
+					else {
+						System.out.println("That door is locked. Sorry!");
 					}
 				}
 				else {
@@ -308,12 +251,73 @@ public class Zorklike {
 
 		//grabbing items
 		Command grabItem = (String action, String object, String target) -> {
+			List<Furniture> furnl = curRoom[0].getFurnL();
+			Iterator<Furniture> iterate = furnl.iterator();
+			while (iterate.hasNext()) {
+				Furniture curfurn = iterate.next();
+				List<Item> iteml = curfurn.getItemL();
+				List<String> requirements = curfurn.getRequirements();
+				Iterator<Item> iterate2 = iteml.iterator();
+				if (requirements==null) {
+					while (iterate2.hasNext()) {
+						Item item = iterate2.next();
+						if (item.getName().equalsIgnoreCase(object) || item.getName().equalsIgnoreCase(target)) {
+							inventory.add(item);
+							iterate2.remove();
+							System.out.println("You grab the " + item.getName() + " and put it into your backpack.");
+							return 0;
+						}
+					}
+				}
+				else {
+					System.out.println("It's locked. No can do, bucakroo.");
+				}
+			}
+			System.out.println("You can't pick up that.");
 			return 0;
 		};
 		for (String cmd : Dictionary.obtaining) {
 			commandHashMap.put(cmd,grabItem);
 		}
+
+		//examine an object/item
+		Command examine = (String action, String object, String target) -> {
+			if (!(target==null && object==null)) {
+				if (target==null) {
+					for (Item item : inventory) {
+						if (item.getName().equalsIgnoreCase(object)) {
+							System.out.println(item.getExtendedDescription());
+						}
+					}
+				}
+				else if (target!=null) {
+					for (Room room : rooms) {
+						if (target.equalsIgnoreCase(room.getName())) {
+							room.getInfo(curRoom[0].getConnections(),0);
+						}
+					}
+				}
+			}
+			else {
+				System.out.println("What are you even looking at??");
+			}
+			return 0;
+		};
+		commandHashMap.put("examine",examine);
+		commandHashMap.put("look",examine);
+		commandHashMap.put("peer",examine);
 		
+		//find command
+		Command find = (String action, String object, String target) -> {
+			if (object==null && target==null) {
+				System.out.println("Find... what, exactly?");
+			}
+			else {
+				System.out.println("I already told you where that is, idiot.");
+			}
+			return 0;
+		};
+		commandHashMap.put("find",find);
 		//game running
 		while (run) {
 			//input
@@ -329,7 +333,6 @@ public class Zorklike {
 
 			System.out.print("> ");
 			String input = scan.nextLine();
-			input = input.toLowerCase();
 			// parser logic
 			String[] stringify = input.split(" ");
 			ArrayList<String> tokenized = new ArrayList<String>(Arrays.asList(stringify));
@@ -339,7 +342,7 @@ public class Zorklike {
 				String token = tokenized.get(i);
 				for (String verb : Dictionary.actions) {
 					if (token.equalsIgnoreCase(verb)) {
-						action = token;
+						action = token.toLowerCase();
 						index = i;
 						break;
 					}
@@ -347,26 +350,21 @@ public class Zorklike {
 				if (index!=-1) break;
 			}
 			if (action!=null) {
-				// remove unneccessary words
-				for (int i=0;i<tokenized.size();i++) {
-					String token = tokenized.get(i);
-					for (String item : Dictionary.useless) {
-						if (token.equals(item)) {
-							tokenized.remove(i);
-						}
-					}
-				}
-
 				if (index==-1) {
 					System.out.println("PARSING ERROR: ERROR CODE: 0");
 				}
 				else {
 					tokenized.subList(0,index+1).clear();
 				}
+				// remove unneccessary words
+				tokenized.removeIf(token ->
+					Arrays.stream(Dictionary.useless)
+						.anyMatch(u -> u.equalsIgnoreCase(token))
+				);
 				boolean objAndTarg = false;
 				for (String item : tokenized) {
 					for (String compare : Dictionary.splitters) {
-						if (item.equals(compare)) {
+						if (item.equalsIgnoreCase(compare)) {
 							objAndTarg = true;
 						}
 					}
@@ -375,32 +373,33 @@ public class Zorklike {
 					ArrayList<String> targetList = new ArrayList<String>();
 					ArrayList<String> objectList= new ArrayList<String>();
 					boolean targl = true;
-					if (targl) {
-						for (int i=0;i<tokenized.size();i++) {
-							String item = tokenized.get(i);
-							for (String compare : Dictionary.splitters) {
-								if (!item.equals(compare)) {
-									targetList.add(item);
-									tokenized.remove(i);
-								}
-								else {
-									targl = false;
-									tokenized.remove(i);
-								}
-							}
+
+					for (String item : tokenized) {
+						if (Arrays.asList(Dictionary.splitters).contains(item.toLowerCase())) {
+							targl=false;
+							continue;
 						}
-					}
-					else {
-						for (int i=0;i<tokenized.size();i++) {
-							String item = tokenized.get(i);
+						if (targl) {
+							targetList.add(item);
+						}
+						else {
 							objectList.add(item);
-							tokenized.remove(i);
 						}
 					}
 					String targetListString = String.join(" ",targetList);
 					String objectListString = String.join(" ",objectList);
-					target = targetListString.trim();
-					object = objectListString.trim();
+					if (targetListString!=""){
+						target=targetListString.trim();
+					}
+					else {
+						target=null;
+					}
+					if (objectListString!="") {
+						object = objectListString.trim();
+					}
+					else {
+						object=null;
+					}
 				}
 				else {
 					ArrayList<String> tokenList = new ArrayList<String>();
@@ -412,40 +411,43 @@ public class Zorklike {
 					boolean checkItems = dictionary.searchItems(token.toLowerCase());
 					System.out.println("checkRooms: " + checkRooms);
 					System.out.println("checkItems: " + checkItems);
+					System.out.println("objAndTarg: " + objAndTarg);
 
 					if (checkRooms) {
-						target = token;
+						target = token.toLowerCase();
 					}
 					else if (checkItems) {
-						object = token;
+						object = token.toLowerCase();
 					}
-					else if (token.equals("around")) {
+					else if (token.equalsIgnoreCase("around")) {
 						action = "around";
 					}
-					else if (token.equals("foreward") || token.equals("front") || token.equals("forewards")) {
+					else if (token.equalsIgnoreCase("foreward") || token.equalsIgnoreCase("front") || token.equalsIgnoreCase("forewards")) {
 						action = "front";
 					}
-					else if (token.equals("backward") || token.equals("back") || token.equals("backwards")) {
+					else if (token.equalsIgnoreCase("backward") || token.equalsIgnoreCase("back") || token.equalsIgnoreCase("backwards")) {
 						action = "back";
 					}
-					else if (token.equals("left")) {
+					else if (token.equalsIgnoreCase("left")) {
 						action = "left";
 					}
-					else if (token.equals("right")) {
+					else if (token.equalsIgnoreCase("right")) {
 						action = "right";
 					}
-					else if (token.equals("inventory")) {
+					else if (token.equalsIgnoreCase("inventory")) {
 						action = "inventory";
 					}
-					else if (token.equals("backpack")) {
+					else if (token.equalsIgnoreCase("backpack")) {
 						action = "inventory";
 					}
 				}
+
 				//response
 				// debug
 				System.out.println("action: " + action);
 				System.out.println("target: " + target);
 				System.out.println("object: " + object);
+				//command
 				commandHashMap.get(action).command(action,object,target);
 			}
 			else {
