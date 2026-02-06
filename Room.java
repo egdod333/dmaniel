@@ -67,7 +67,7 @@ public class Room {
         }
         return iteml;
     }
-    public boolean getInfo(Connection[] connects, int moving) {
+    public boolean getInfo(Connection[] connects) {
         List<String> iteml = new ArrayList<String>();
         for (Furniture furn : furnl) {
             List<Item> citeml = furn.getItemL();
@@ -75,13 +75,32 @@ public class Room {
             String desc = furn.getDescription();
             if (furn.isOpen()) {
                 if (citeml!=null) {
+                    List<String> tempNameStorage = new ArrayList<String>();
                     for (Item it : citeml) {
-                        String itnm = it.getName();
-                        if (furn.isContainer()) {
-                            iteml.add(itnm + " in the " + name);
+                        String itnm = it.getName(); 
+                        List<String> aOrAn = new ArrayList<String>(Arrays.asList(itnm.split("")));
+                        if (aOrAn.get(0).toLowerCase().equals("a")||aOrAn.get(0).toLowerCase().equals("e")||aOrAn.get(0).toLowerCase().equals("i")||aOrAn.get(0).toLowerCase().equals("o")||aOrAn.get(0).toLowerCase().equals("u")) {
+                            tempNameStorage.add("an " + itnm);
                         }
                         else {
-                            iteml.add(itnm + " on the " + name);
+                            tempNameStorage.add("a " + itnm);
+                        }
+                    }
+                    tempNameStorage.set(tempNameStorage.size()-1,"and " + (tempNameStorage.get(tempNameStorage.size()-1)));
+                    if (tempNameStorage.size()>2) {
+                        if (furn.isContainer()) {
+                            iteml.add("in the " + furn.getName() + " there is " + String.join(", ",tempNameStorage));
+                        }
+                        else {
+                            iteml.add("on the " + furn.getName() + " there is " + String.join(", ",tempNameStorage));
+                        }
+                    }
+                    else {
+                        if (furn.isContainer()) {
+                            iteml.add("in the " + furn.getName() + " there is " + String.join(" ",tempNameStorage));
+                        }
+                        else {
+                            iteml.add("on the " + furn.getName() + " there is " + String.join(" ",tempNameStorage));
                         }
                     }
                 }
@@ -125,13 +144,9 @@ public class Room {
         }
         else {
             for (String item : iteml) {
-                String[] check = item.split("");
-                if (check[0].equalsIgnoreCase("a") || check[0].equalsIgnoreCase("e") || check[0].equalsIgnoreCase("i") || check[0].equalsIgnoreCase("o") || check[0].equalsIgnoreCase("u"))  {
-                    System.out.println("  An " + item);
-                }
-                else {
-                    System.out.println("  A " + item);
-                }
+                String[] upp = item.split("");
+                upp[0] = upp[0].toUpperCase();
+                System.out.println("   " + String.join("",upp));
             }
         }
         if (!(connections.length==0||connections==null)) {
@@ -209,6 +224,16 @@ public class Room {
         }
         else {
             System.out.println("Oddly, the room you are in is connected to " + Zorklike.italics + "no other room..." + Zorklike.resetFormatting + " Strange. How did you even get here??");
+        }
+        return true;
+    }
+    public boolean getFurnInfo(Furniture furniture) {
+        List<String> iteml = new ArrayList<String>();
+        for (Furniture furn : furnl) {
+            List<Item> citeml = furn.getItemL();
+            String name = furn.getName();
+            String extdesc = furn.getExtendedDescription();
+
         }
         return true;
     }

@@ -1,6 +1,7 @@
 package zorklike;
 
 //make open command open things, make locked furniture not tell you whats in them, and get locked rooms working properly
+//search functions dont work for single words in furniture names (i.e. wooden table returns wooden table but table returns null) whatever man fuck this ion wanan fix that
 
 //import statements
 import zorklike.Room;
@@ -58,15 +59,15 @@ public class Zorklike {
 		//create rooms
 
 		//testroom (requires key and axe from all connections)
-		rooms.add(new Room("testroom","test room","its testroom oh yeah",new Connection("front","testroom2",false),new Connection("right","testroom3",true)));
+		rooms.add(new Room("testroom","test room","its testroom oh yeah",new Connection("front","testroom2",true),new Connection("right","testroom3",true)));
 		//testroom items
-		rooms.get(0).addFurniture(new Furniture("wooden table","wooden table", "a wooden table stands in the corner",false,true,new Item(Type.KEY,"key","simple key","A small silver key. It feels cold to the touch.",true,0,0,null),new Item(Type.WEAPON,"axe","fireaxe","A hefty red and yellow axe similar to those that the local fire department uses. How did this end up here?",true,10,100,null)));
+		rooms.get(0).addFurniture(new Furniture("table","wooden table", "a wooden table stands in the corner",false,true,new Item(Type.KEY,"key","simple key","A small silver key. It feels cold to the touch.",true,0,0,null),new Item(Type.WEAPON,"axe","fireaxe","A hefty red and yellow axe similar to those that the local fire department uses. How did this end up here?",true,10,100,null)));
 		// in front of you, testroom2, to your right, testroom3
 
 		//testroom2
 		rooms.add(new Room("testroom2","testing room travel","yuhhhh",new Connection("back","testroom",true,"key","axe")));
 		//testroom2 items
-		rooms.get(1).addFurniture(new Furniture("chest","metal chest","A locked iron chest sits in the center of the room",true,false,new Item(Type.RANDOM,"lint","ball of lint","A ball of lint",false,0,0,null)).addRequirements("gray"));
+		rooms.get(1).addFurniture(new Furniture("metal chest","iron chest","A locked iron chest sits in the center of the room",true,false,new Item(Type.RANDOM,"lint","ball of lint","A ball of lint",false,0,0,null)).addRequirements("gray"));
 		
 		// behind you, testroom
 
@@ -118,7 +119,7 @@ public class Zorklike {
 
 		//look around
 		Command lookAround = (String action, String object, String target) -> {
-			curRoom[0].getInfo(null,2);
+			curRoom[0].getInfo(null);
 			return 0;
 		};
 		commandHashMap.put("around",lookAround);
@@ -134,7 +135,7 @@ public class Zorklike {
 								if (room.getName().equalsIgnoreCase(target)) {
 									curRoom[0] = room;
 									System.out.print("You are now in " + room.getName() + ". " + room.getDescription() + ".\n");
-									curRoom[0].getInfo(null,1);
+									curRoom[0].getInfo(null);
 									return 0;
 								}
 							}
@@ -229,7 +230,7 @@ public class Zorklike {
 							if (room.getName().equalsIgnoreCase(name)) {
 								curRoom[0] = room;
 								System.out.print("You are now in " + fixed + ". " + room.getDescription() + ".\n");
-								curRoom[0].getInfo(null,1);
+								curRoom[0].getInfo(null);
 								return 0;
 							}
 						}
@@ -284,22 +285,73 @@ public class Zorklike {
 		Command examine = (String action, String object, String target) -> {
 			if (!(target==null && object==null)) {
 				if (target==null) {
+					boolean none = false;
 					for (Item item : inventory) {
 						if (item.getName().equalsIgnoreCase(object)) {
 							System.out.println(item.getExtendedDescription());
+							none = true;
 						}
+					}
+					if (none) {
+						System.out.println("That item isn't in your inventory... Sorry!");
 					}
 				}
 				else if (target!=null) {
-					for (Room room : rooms) {
-						if (target.equalsIgnoreCase(room.getName())) {
-							room.getInfo(curRoom[0].getConnections(),0);
+					boolean checkRooms = dictionary.searchRooms(target.toLowerCase());
+					boolean roomSuccess = false;
+					boolean checkFurniture = dictionary.searchFurniture(target.toLowerCase());
+					boolean furnSuccess = false;
+					if (checkRooms) {
+						for (Room room : rooms) {
+							if (target.equalsIgnoreCase(room.getName())) {
+								room.getInfo(curRoom[0].getConnections());
+								roomSuccess = true;
+							}
 						}
+					}
+					else if (checkFurniture) {
+						List<Furniture> furnl = new ArrayList<Furniture>();
+						for (Room room : rooms) {
+							List<Furniture> rfurnl = new ArrayList<Furniture>(room.getFurnL());
+							for (Furniture furn : rfurnl) {
+								furnl.add(furn);
+							}
+						}
+						for (Furniture furn : furnl) {
+							if (target.equalsIgnoreCase(furn.getName())) {
+								for (Furniture furnr : curRoom[0].getFurnL()) {
+									if (furn.getName().equalsIgnoreCase(furnr.getName())) {
+										System.out.println(furn.getExtendedDescription());
+										List<Item> citeml = furn.getItemL();
+										if (furn.isOpen()) {
+											if (citeml!=null) {
+												List<String> tempNameStorage = new ArrayList<String>();
+												for (Item it : citeml) {
+													String itnm = it.getName();
+													List<String> aOrAn = new ArrayList<String>(Arrays.asList(itnm.split("")));
+
+												}
+											}
+										}
+										else {
+
+										}
+										furnSuccess = true;
+									}
+								}
+							}
+						}
+					}
+					if (checkRooms && !roomSuccess) {
+						System.out.println("Unfortunately, that room seems to not exist.");
+					}
+					else if (checkFurniture && !furnSuccess) {
+						System.out.println("There is no " + target + " in this room.");
 					}
 				}
 			}
 			else {
-				System.out.println("What are you even looking at??");
+				System.out.println("No clue what you're trying to examine, sorry.");
 			}
 			return 0;
 		};
@@ -334,9 +386,8 @@ public class Zorklike {
 			System.out.print("> ");
 			String input = scan.nextLine();
 			// parser logic
-			String[] stringify = input.split(" ");
-			ArrayList<String> tokenized = new ArrayList<String>(Arrays.asList(stringify));
-			// delete action and all words before action after setting action
+			ArrayList<String> tokenized = new ArrayList<String>(Arrays.asList(input.split(" ")));
+			// delete action and all words before action after setting action variable
 			int index = -1;
 			for (int i=0;i<tokenized.size();i++) {
 				String token = tokenized.get(i);
@@ -347,21 +398,25 @@ public class Zorklike {
 						break;
 					}
 				}
+				// will loop until it finds an action verb
 				if (index!=-1) break;
 			}
 			if (action!=null) {
 				if (index==-1) {
-					System.out.println("PARSING ERROR: ERROR CODE: 0");
+					// literally isnt possible
+					System.out.println("yo how the fuck");
 				}
 				else {
+					// deletes all words before action word and the action word from the tokenized arraylist
 					tokenized.subList(0,index+1).clear();
 				}
-				// remove unneccessary words
+				// remove unneccessary words (highkey forgot how this code works idk man)
 				tokenized.removeIf(token ->
 					Arrays.stream(Dictionary.useless)
 						.anyMatch(u -> u.equalsIgnoreCase(token))
 				);
 				boolean objAndTarg = false;
+				// if there is a splitter word, that means there is an object and a target in the sentence
 				for (String item : tokenized) {
 					for (String compare : Dictionary.splitters) {
 						if (item.equalsIgnoreCase(compare)) {
@@ -369,6 +424,7 @@ public class Zorklike {
 						}
 					}
 				}
+				// if there is an object and a target
 				if (objAndTarg) {
 					ArrayList<String> targetList = new ArrayList<String>();
 					ArrayList<String> objectList= new ArrayList<String>();
@@ -401,6 +457,7 @@ public class Zorklike {
 						object=null;
 					}
 				}
+				// if there is only an object or a target
 				else {
 					ArrayList<String> tokenList = new ArrayList<String>();
 					for (String token : tokenized) {
@@ -409,8 +466,10 @@ public class Zorklike {
 					String token = String.join(" ",tokenList);
 					boolean checkRooms = dictionary.searchRooms(token.toLowerCase());
 					boolean checkItems = dictionary.searchItems(token.toLowerCase());
+					boolean checkFurniture = dictionary.searchFurniture(token.toLowerCase());
 					System.out.println("checkRooms: " + checkRooms);
 					System.out.println("checkItems: " + checkItems);
+					System.out.println("checkFurniture: " + checkFurniture);
 					System.out.println("objAndTarg: " + objAndTarg);
 
 					if (checkRooms) {
@@ -418,6 +477,9 @@ public class Zorklike {
 					}
 					else if (checkItems) {
 						object = token.toLowerCase();
+					}
+					else if (checkFurniture) {
+						target = token.toLowerCase();
 					}
 					else if (token.equalsIgnoreCase("around")) {
 						action = "around";
@@ -439,6 +501,9 @@ public class Zorklike {
 					}
 					else if (token.equalsIgnoreCase("backpack")) {
 						action = "inventory";
+					}
+					else if (token.equalsIgnoreCase("door")) {
+						target = "door";
 					}
 				}
 
