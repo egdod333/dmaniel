@@ -61,13 +61,13 @@ public class Zorklike {
 		//testroom (requires key and axe from all connections)
 		rooms.add(new Room("testroom","test room","its testroom oh yeah",new Connection("front","testroom2",true),new Connection("right","testroom3",true)));
 		//testroom items
-		rooms.get(0).addFurniture(new Furniture("table","wooden table", "a wooden table stands in the corner",false,true,new Item(Type.KEY,"key","simple key","A small silver key. It feels cold to the touch.",true,0,0,null),new Item(Type.WEAPON,"axe","fireaxe","A hefty red and yellow axe similar to those that the local fire department uses. How did this end up here?",true,10,100,null)));
+		rooms.get(0).addFurniture(new Furniture("table","wooden table", "A wooden table stands in the corner",false,true,new Item(Type.KEY,"key","simple key","A small silver key. It feels cold to the touch.",true,0,0,null),new Item(Type.WEAPON,"axe","fireaxe","A hefty red and yellow axe similar to those that the local fire department uses. How did this end up here?",true,10,100,null)));
 		// in front of you, testroom2, to your right, testroom3
 
 		//testroom2
 		rooms.add(new Room("testroom2","testing room travel","yuhhhh",new Connection("back","testroom",true,"key","axe")));
 		//testroom2 items
-		rooms.get(1).addFurniture(new Furniture("metal chest","iron chest","A locked iron chest sits in the center of the room",true,false,new Item(Type.RANDOM,"lint","ball of lint","A ball of lint",false,0,0,null)).addRequirements("gray"));
+		rooms.get(1).addFurniture(new Furniture("metal chest","a metal chest","A locked iron chest sits in the center of the room",true,false,new Item(Type.RANDOM,"lint","ball of lint","A ball of lint",false,0,0,null)).addRequirements("gray"));
 		
 		// behind you, testroom
 
@@ -321,7 +321,8 @@ public class Zorklike {
 							if (target.equalsIgnoreCase(furn.getName())) {
 								for (Furniture furnr : curRoom[0].getFurnL()) {
 									if (furn.getName().equalsIgnoreCase(furnr.getName())) {
-										System.out.println(furn.getExtendedDescription());
+										System.out.println("You examine the " + furn.getName());
+										System.out.println("   " + furn.getExtendedDescription());
 										List<Item> citeml = furn.getItemL();
 										if (furn.isOpen()) {
 											if (citeml!=null) {
@@ -329,12 +330,34 @@ public class Zorklike {
 												for (Item it : citeml) {
 													String itnm = it.getName();
 													List<String> aOrAn = new ArrayList<String>(Arrays.asList(itnm.split("")));
-
+													if (aOrAn.get(0).toLowerCase().equals("a")||aOrAn.get(0).toLowerCase().equals("e")||aOrAn.get(0).toLowerCase().equals("i")||aOrAn.get(0).toLowerCase().equals("o")||aOrAn.get(0).toLowerCase().equals("u")) {
+                            							tempNameStorage.add("an " + itnm);
+                        							}
+                        							else {
+                            							tempNameStorage.add("a " + itnm);
+                        							}
+												}
+												tempNameStorage.set(tempNameStorage.size()-1,"and " + (tempNameStorage.get(tempNameStorage.size()-1)));
+												if (tempNameStorage.size()>2) {
+													if (furn.isContainer()) {
+														System.out.println("   Inside, there is " + String.join(", ",tempNameStorage) + ".");
+													}
+													else {
+														System.out.println("   On top, there is " + String.join(", ",tempNameStorage) + ".");
+													}
+												}
+												else {
+													if (furn.isContainer()) {
+														System.out.println("   Inside, there is " + String.join(" ",tempNameStorage) + ".");
+													}
+													else {
+														System.out.println("   On top, there is " + String.join(" ",tempNameStorage) + ".");
+													}
 												}
 											}
 										}
 										else {
-
+											System.out.println("   You try to peer inside, but it is closed.");
 										}
 										furnSuccess = true;
 									}
