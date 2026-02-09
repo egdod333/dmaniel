@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.HashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Zorklike {
 	//init variables
@@ -50,6 +52,16 @@ public class Zorklike {
 	public static final String boldWhiteColor = "\033[1;37m";
 	public static final String italics = "\033[3m";
 	public static final String clear = "\033[H\033[2J";
+	// custom functions
+	public static boolean containsExactWord(String mainStr, String word) {
+		// \\b is a regex word boundary
+		// Pattern.CASE_INSENSITIVE makes it not case sensitive
+		Pattern pattern = Pattern.compile("\\b" + Pattern.quote(word) + "\\b",Pattern.CASE_INSENSITIVE);
+		Matcher matcher = pattern.matcher(mainStr);
+		return matcher.find();
+	}
+
+	// entry plug
 	public static void main(String[] args) {
 		//declare init variables
 		boolean run = true;
@@ -130,10 +142,11 @@ public class Zorklike {
 			if (target!=null) {
 				Connection[] connectionList = curRoom[0].getConnections();
 				for (Connection connect : connectionList) {
-					if (connect.getName().equalsIgnoreCase(target)) {
+					// multi word target gets here then just doesnt print anything.... why???
+					if (containsExactWord(target,connect.getName())) {
 						if (connect.isOpen()) {
 							for (Room room : rooms) {
-								if (room.getName().equalsIgnoreCase(target)) {
+								if (containsExactWord(target,room.getName())) {
 									curRoom[0] = room;
 									System.out.print("You are now in " + room.getName() + ". " + room.getDescription() + ".\n");
 									curRoom[0].getInfo(null);
@@ -143,6 +156,7 @@ public class Zorklike {
 						}
 						else {
 							System.out.println("That door is locked. Sorry!");
+							return 0;
 						}
 					}
 					else if (target==null) {
@@ -151,9 +165,7 @@ public class Zorklike {
 					}
 				}
 			}
-			else {
-				System.out.println("This room you speak of... uh... it doesn't exist.");
-			}
+			System.out.println("This room you speak of... uh... it doesn't exist.");
 			return 0;
 		};
 		commandHashMap.put("go",moveRooms);
@@ -228,7 +240,7 @@ public class Zorklike {
 						upper[0] = upper[0].toUpperCase();
 						String fixed = String.join("",upper);
 						for (Room room : rooms) {
-							if (room.getName().equalsIgnoreCase(name)) {
+							if (containsExactWord(name,room.getName())) {
 								curRoom[0] = room;
 								System.out.print("You are now in " + fixed + ". " + room.getDescription() + ".\n");
 								curRoom[0].getInfo(null);
@@ -263,7 +275,7 @@ public class Zorklike {
 				if (requirements==null) {
 					while (iterate2.hasNext()) {
 						Item item = iterate2.next();
-						if (item.getName().equalsIgnoreCase(object) || item.getName().equalsIgnoreCase(target)) {
+						if (containsExactWord(object,item.getName()) || containsExactWord(target,item.getName())) {
 							inventory.add(item);
 							iterate2.remove();
 							System.out.println("You grab the " + item.getName() + " and put it into your backpack.");
@@ -288,7 +300,7 @@ public class Zorklike {
 				if (target==null) {
 					boolean none = false;
 					for (Item item : inventory) {
-						if (item.getName().equalsIgnoreCase(object)) {
+						if (containsExactWord(object,item.getName())) {
 							System.out.println(item.getExtendedDescription());
 							none = true;
 						}
@@ -304,7 +316,7 @@ public class Zorklike {
 					boolean furnSuccess = false;
 					if (checkRooms) {
 						for (Room room : rooms) {
-							if (target.equalsIgnoreCase(room.getName())) {
+							if (containsExactWord(target,room.getName())) {
 								room.getInfo(curRoom[0].getConnections());
 								roomSuccess = true;
 							}
@@ -319,9 +331,9 @@ public class Zorklike {
 							}
 						}
 						for (Furniture furn : furnl) {
-							if (target.equalsIgnoreCase(furn.getName())) {
+							if (containsExactWord(target,furn.getName())) {
 								for (Furniture furnr : curRoom[0].getFurnL()) {
-									if (furn.getName().equalsIgnoreCase(furnr.getName())) {
+									if (containsExactWord(furn.getName(),furnr.getName())) {
 										System.out.println("You examine the " + furn.getName());
 										System.out.println("   " + furn.getExtendedDescription());
 										List<Item> citeml = furn.getItemL();
@@ -496,9 +508,6 @@ public class Zorklike {
 					}
 					String token = String.join(" ",tokenList);
 					System.out.println("token: " + token);
-					if (token.contains("door")) {
-						System.out.println("hi");
-					}
 					boolean checkRooms = dictionary.searchRooms(token.toLowerCase());
 					boolean checkItems = dictionary.searchItems(token.toLowerCase());
 					boolean checkFurniture = dictionary.searchFurniture(token.toLowerCase());

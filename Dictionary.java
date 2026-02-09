@@ -64,7 +64,7 @@ public class Dictionary {
 	} 
 	public boolean searchRooms(String roomName) { 
 		for (int i=0;i<roomNames.length;i++) { 
-			if (roomName.contains(roomNames[i])) { 
+			if (Zorklike.containsExactWord(roomName,roomNames[i])) { 
 				return true; 
 			}
         }
@@ -72,7 +72,7 @@ public class Dictionary {
     }
     public boolean searchItems(String itemName) {
         for (int i=0;i<itemNames.length;i++) {
-            if (itemName.contains(itemNames[i])) {
+            if (Zorklike.containsExactWord(itemName,itemNames[i])) {
                 return true;
             }
         }
@@ -80,7 +80,7 @@ public class Dictionary {
     }
     public boolean searchFurniture(String furnName) {
         for (int i=0;i<furnNames.length;i++) {
-            if (furnName.contains(furnNames[i])) {
+            if (Zorklike.containsExactWord(furnName,furnNames[i])) {
                 return true;
             }
         }
