@@ -408,10 +408,87 @@ public class Zorklike {
 		commandHashMap.put("find",find);
 
 		//open/unlocking
+		// ok so what ya gotta do (because items and rooms can be both objects and items) is this
+		/* 
+			if the target is an openable and there is no object, search entire inventory for required items and ask the user if they want to use all the items
+			if object is item and target is openable, use the object to try and open the target
+			if target is openable and item is object, use the target to try and open the object
+			also add logic for already unlocked doors
+		*/
 		Command open = (String action, String object, String target) -> {
+			boolean itemIsTarget = dictionary.searchItems(target);
+			String openable;
+			String unlocker;
+			if (itemIsTarget) {
+				unlocker = target;
+				openable = object;
+			}
+			else {
+				unlocker = object;
+				openable = target;
+			}
+			boolean checkRooms = dictionary.searchRooms(openable);
+			boolean checkFurniture = dictionary.searchFurniture(openable);
 
+			if (checkRooms) {
+				Connection[] clist = curRoom[0].getConnections();
+				for (Connection connection : clist) {
+					if (containsExactWord(openable,connection.getName())) {
+						if (!connection.isOpen()) {
+							if (unlocker!=null) {
+								//if user specifies what to use to open the door
+								boolean itemInInv = false;
+								for (Item item : inventory) {
+									if (containsExactWord(unlocker,item.getName())) {
+										itemInInv = true;
+										if (connection.useItem(unlocker)) {
+											System.out.print("You successfully used the " + unlocker + ".");
+											if (connection.getRequirements().size()!=0) {
+												System.out.println("\nThis door still needs the following items to open:");
+												for (String requirement : connection.getRequirements()) {
+													System.out.println(requirement);
+												}
+											}
+											else {
+												System.out.println(" The door is now open.");
+											}
+											return 0;
+										}
+										else {
+											System.out.println("You can't use that item in that way.");
+											return 0;
+										}
+									}
+								}
+								if (!itemInInv) {
+									System.out.println("You look through your backpack for that item, but cannot find it.");
+									return 0;
+								}
+							}
+							else {
+								//if the user doesn't specify, check inventory for required items and use them (PLEASE ADD A CONFIRMATION MESSAGE SO THE USER DOESNT GET RID OF ITEMS THEY WANT FOR SOMETHING ELSE)
+								List<String> reqItems = new ArrayList<String>();
+								for (Item item : inventory) {
+									for (String requirement : connection.getRequirements()) {
+										if (item.getName().equalsIgnoreCase(requirement)) {
+											reqItems.add(item.getName());
+										}
+									}
+								}
+								return 0;
+							}
+						}
+					}
+				}
+			}
+			else {
+				//furniture unlocking
+			}
+			
+			System.out.println("Sorry, I'm not quite sure what you're trying to open.");
 			return 0;
 		};
+		commandHashMap.put("open",open);
 
 		//game running
 		while (run) {

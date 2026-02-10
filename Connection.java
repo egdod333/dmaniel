@@ -45,52 +45,25 @@ public class Connection {
             return false;
         }
         Iterator<String> iterate1 = requirements.iterator();
-       while (iterate1.hasNext()) {
+        while (iterate1.hasNext()) {
             String nextReq = iterate1.next();
-            String require = nextReq;
+            // String require = nextReq;
             if (nextReq==null) {
                 return false;
             }
-            else if (nextReq.equalsIgnoreCase(item)) {
+            else if (Zorklike.containsExactWord(item,nextReq)) {
                 iterate1.remove();
                 Iterator<Item> iterate = Zorklike.inventory.iterator();
                 while (iterate.hasNext()) {
                     Item currentItem = iterate.next();
-                    if (currentItem.getName().equalsIgnoreCase(item)) {
+                    if (Zorklike.containsExactWord(item,currentItem.getName())) {
                         iterate.remove();
                         break;
                     }
                 }
-                return true;
-            }
-        }
-        return false;
-    }
-    public boolean openClose(boolean forceOpenClose) {
-        if (!forceOpenClose) {
-            for (int i=0;i<requirements.size();i++) {
-                if (requirements.get(i) != null) {
-                    return false;
+                if (requirements.size()==0) {
+                    open=true;
                 }
-                else {
-                    if (open) {
-                        open=false;
-                        return true;
-                    }
-                    else {
-                        open=true;
-                        return true;
-                    }
-                }
-            }
-        } 
-        else {
-            if (open) {
-                open=false;
-                return true;
-            }
-            else {
-                open=true;
                 return true;
             }
         }
