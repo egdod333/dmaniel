@@ -54,10 +54,11 @@ public class Zorklike {
 	public static final String clear = "\033[H\033[2J";
 	// custom functions
 	public static boolean containsExactWord(String mainStr, String word) {
+		if(mainStr==null||word==null){return false;}
 		// \\b is a regex word boundary
 		// Pattern.CASE_INSENSITIVE makes it not case sensitive
 		Pattern pattern = Pattern.compile("\\b" + Pattern.quote(word) + "\\b",Pattern.CASE_INSENSITIVE);
-		System.out.println("main="+mainStr+"\npattern="+pattern+"\n");
+		// System.out.println("main="+mainStr+"\npattern="+pattern+"\n");
 		Matcher matcher = pattern.matcher(mainStr);
 		return matcher.find();
 	}
@@ -582,14 +583,9 @@ public class Zorklike {
 						tokenList.add(token);
 					}
 					String token = String.join(" ",tokenList);
-					System.out.println("token: " + token);
 					boolean checkRooms = dictionary.searchRooms(token.toLowerCase());
 					boolean checkItems = dictionary.searchItems(token.toLowerCase());
 					boolean checkFurniture = dictionary.searchFurniture(token.toLowerCase());
-					System.out.println("checkRooms: " + checkRooms);
-					System.out.println("checkItems: " + checkItems);
-					System.out.println("checkFurniture: " + checkFurniture);
-					System.out.println("objAndTarg: " + objAndTarg);
 
 					if (checkRooms) {
 						target = token.toLowerCase();
@@ -631,9 +627,6 @@ public class Zorklike {
 				System.out.println("action: " + action);
 				System.out.println("target: " + target);
 				System.out.println("object: " + object);
-				for (String item : dictionary.getItemNames()) {
-					System.out.println(item);
-				}
 				//command
 				commandHashMap.get(action).command(action,object,target);
 			}
